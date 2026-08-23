@@ -11,11 +11,7 @@ function corsOrigins(): string[] {
     return fromEnv;
   }
 
-  return [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    ...fromEnv,
-  ];
+  return ['http://localhost:5173', 'http://127.0.0.1:5173', ...fromEnv];
 }
 
 async function bootstrap() {
@@ -23,5 +19,5 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigins() });
   await app.listen(process.env.PORT ?? 3001);
 }
-bootstrap();
 
+bootstrap();
