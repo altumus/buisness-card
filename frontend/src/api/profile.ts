@@ -31,7 +31,9 @@ const PROFILE_QUERY = `
 `
 
 export async function fetchProfile(): Promise<Profile> {
-  const response = await fetch('/graphql', {
+  const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL ?? '/graphql'
+
+  const response = await fetch(graphqlUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: PROFILE_QUERY }),
