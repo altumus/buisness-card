@@ -1,15 +1,41 @@
-import { useState } from 'react'
-import { profile } from './data/profile'
+import { useEffect, useState } from 'react'
+import { displayUrl, fetchProfile, telHref, type Profile } from './api/profile'
 import './App.css'
 
 function App() {
   const [flipped, setFlipped] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const flip = () => setFlipped((value) => !value)
+  const load = () => {
+    setLoading(true)
+    setError(null)
+    fetchProfile()
+      .then((data) => {
+        setProfile(data)
+        setLoading(false)
+      })
+      .catch((reason: unknown) => {
+        setProfile(null)
+        setError(reason instanceof Error ? reason.message : 'Request failed')
+        setLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  const flip = () => {
+    if (profile) {
+      setFlipped((value) => !value)
+    }
+  }
 
   return (
     <main className="desk">
-      <p className="proof-label">цифровая визитка</p>
+      <p className="proof-label">visiting card</p>
 
       <div className="sheet">
         <span className="mark mark-tl" aria-hidden="true" />
@@ -19,11 +45,12 @@ function App() {
 
         <article
           className={flipped ? 'card is-flipped' : 'card'}
-          tabIndex={0}
+          tabIndex={profile ? 0 : -1}
+          aria-busy={loading}
           aria-label={
             flipped
-              ? 'Оборот визитки. Нажмите, чтобы вернуть лицевую сторону.'
-              : 'Визитка. Нажмите, чтобы перевернуть.'
+              ? 'Card reverse. Click to return to the front.'
+              : 'Visiting card. Click to flip.'
           }
           onClick={flip}
           onKeyDown={(event) => {
@@ -34,43 +61,109 @@ function App() {
           }}
         >
           <section className="face face-front">
-            <header className="row">
-              <span className="initials">{profile.initials}</span>
-              <span className="spec">90 x 50 мм</span>
-            </header>
+            {loading && (
+              <p className="status">setting type</p>
+            )}
 
-            <div className="nameblock">
-              <p className="lastname">{profile.lastName}</p>
-              <p className="firstname">{profile.firstName}</p>
-            </div>
+            {error && (
+              <div className="status">
+                <p>sheet not assembled</p>
+                <button
+                  type="button"
+                  className="retry"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    load()
+                  }}
+                >
+                  retry
+                </button>
+              </div>
+            )}
 
-            <footer className="row">
-              <span className="title">{profile.title}</span>
-              <a
-                className="mail"
-                href={`mailto:${profile.email}`}
-                onClick={(event) => event.stopPropagation()}
-              >
-                {profile.email}
-              </a>
-            </footer>
+            {profile && (
+              <>
+                <header className="row">
+                  <span className="initials">{profile.initials}</span>
+                </header>
+
+                <div className="nameblock">
+                  <p className="lastname">{profile.lastName}</p>
+                  <p className="firstname">{profile.firstName}</p>
+                  <p className="role">{profile.title}</p>
+                </div>
+
+                <footer className="row">
+                  <span className="location">{profile.location}</span>
+                  <a
+                    className="link"
+                    href={`mailto:${profile.email}`}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {profile.email}
+                  </a>
+                </footer>
+              </>
+            )}
           </section>
 
           <section className="face face-back">
-            <header className="row">
-              <span className="spec">оборот</span>
-              <span className="spec">{profile.initials}</span>
-            </header>
+            {profile && (
+              <>
+                <header className="row">
+                  <span className="spec">reverse</span>
+                  <span className="spec">{profile.initials}</span>
+                </header>
 
-            <div className="colophon">
-              <p className="colophon-label">состав работы</p>
-              <p className="colophon-body">{profile.stack.join(', ')}</p>
-            </div>
+                <div className="back-body">
+                  <div className="contacts">
+                    <a
+                      className="link"
+                      href={telHref(profile.phone)}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {profile.phone}
+                    </a>
+                    <a
+                      className="link"
+                      href={profile.telegram}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {displayUrl(profile.telegram)}
+                    </a>
+                    <a
+                      className="link"
+                      href={profile.linkedin}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      {displayUrl(profile.linkedin)}
+                    </a>
+                  </div>
+
+                  <div className="colophon">
+                    <p className="colophon-label">{profile.tagline}</p>
+                    <p className="colophon-body">{profile.stack.join(', ')}</p>
+                  </div>
+                </div>
+              </>
+            )}
           </section>
         </article>
       </div>
 
-      <p className="hint">{flipped ? 'лицевая сторона' : 'нажмите, чтобы перевернуть'}</p>
+      <p className="hint">
+        {loading
+          ? 'fetching the sheet'
+          : error
+            ? error
+            : flipped
+              ? 'front'
+              : 'click to flip'}
+      </p>
     </main>
   )
 }

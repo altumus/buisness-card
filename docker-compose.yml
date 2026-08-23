@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: card-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: card
+      POSTGRES_PASSWORD: card
+      POSTGRES_DB: card
+    ports:
+      - '5433:5432'
+    volumes:
+      - card-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U card -d card']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  card-pg:

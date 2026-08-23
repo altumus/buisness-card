@@ -1,0 +1,22 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Profile {
+  email: String!
+  firstName: String!
+  id: String!
+  initials: String!
+  lastName: String!
+  linkedin: String!
+  location: String!
+  phone: String!
+  stack: [String!]!
+  tagline: String!
+  telegram: String!
+  title: String!
+}
+
+type Query {
+  profile: Profile!
+}
